@@ -70,11 +70,65 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
         A root node of the neighbor joining tree.
 
     """
+    n = len(labels)
+    nodes = [Node(label, None, 0.0, None, 0.0) for label in labels]
+
+    if n == 1:
+        return nodes[0]
     
-    self.tree = Node()
+    active = list(range(n))
 
-    raise NotImplementedError()
+    while len(active) > 2:
+        m = len(active)
 
+        # matrix for calculating current storing row sums
+        D = distances[active, :][:, active]
+
+        # calculate Q
+        row_sums = np.sum(D, axis=1)
+        Q = (m - 2) * D - row_sums[:, None] - row_sums[None, :]
+        np.fill_diagonal(Q, np.inf)
+
+        # find nodes for which Q is min
+        i_pos, j_pos = np.unravel_index(np.argmin(Q), Q.shape)
+        i = active[i_pos]
+        j = active[j_pos]
+        
+        # make new new node ij & calculate branch lengths from i,j to new node
+        branch_i = distances[i,j] / 2 + (row_sums[i_pos] - row_sums[j_pos]) / (2 * (m - 2))
+        branch_j = distances[i,j] - branch_i
+
+        new_node = Node(f"{len(nodes) + 1}", nodes[i], branch_i, nodes[j], branch_j)
+
+        # calculate distance from new node to every other node (except i,j)
+        remaining = [k for k in active if k != i and k != j]
+        
+        new_distances = {}
+        for k in remaining:
+            new_distances[k] = (distances[i,k] + distances[j,k] - distances[i,j]) / 2
+
+        # add new node + add new distances to distance matrix
+        nodes.append(new_node)
+
+        prev_size = distances.shape[0]
+        expanded = np.zeros((prev_size + 1, prev_size + 1))
+        expanded[:prev_size, :prev_size] = distances
+
+        for k, dist in new_distances.items():
+            expanded[len(nodes) - 1, k] = dist
+            expanded[k, len(nodes) - 1] = dist
+
+        distances = expanded
+
+        active = remaining + [len(nodes)- 1]
+
+    # join final two nodes
+    i, j = active
+    final_dist = distances[i,j]
+    root = Node("root", nodes[i], final_dist / 2, nodes[j], final_dist / 2)
+
+    return root
+   
 
 def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
     """A function for plotting neighbor joining phylogeny dendrogram.
