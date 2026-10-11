@@ -153,6 +153,48 @@ def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
     >>> fig.savefig("example.png")
 
     """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 8))
+    
+    y_positions = {}
+    leaf_num = [0]
+
+    def assign_y(node):
+        if node.left is None and node.right is None:
+            y_positions[node] = leaf_num[0]
+            leaf_num[0] += 1
+        else:
+            assign_y(node.left)
+            assign_y(node.right)
+            y_positions[node] = (y_positions[node.left] + y_positions[node.right]) / 2
+
+    def draw(node, x):
+        if node.left is None and node.right is None:
+            ax.text(x + 0.1, y_positions[node], node.name, va="center")
+            return
+        
+        left = node.left
+        right = node.right
+
+        x_left = x + node.left_distance
+        x_right = x + node.right_distance
+
+        y_left = y_positions[left]
+        y_right = y_positions[right]
+
+        ax.plot([x, x_left], [y_left, y_left], color="black")
+        ax.plot([x, x_right], [y_right, y_right], color="black")
+        ax.plot([x, x], [y_left, y_right], color="black")
+
+        draw(left, x_left)
+        draw(right, x_right)
+
+    assign_y(tree)
+    draw(tree, 0)
+
+    ax.plot([-0.5, 0], [y_positions[tree], y_positions[tree]], color="black")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
     return ax
 
