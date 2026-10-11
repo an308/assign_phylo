@@ -130,7 +130,7 @@ def neighbor_joining(distances: np.ndarray, labels: list) -> Node:
     return root
    
 
-def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
+def plot_nj_tree(tree: Node, ax: Axes = None, group_by_label = None, colours = None) -> None:
     """A function for plotting neighbor joining phylogeny dendrogram.
 
     Parameters
@@ -170,7 +170,14 @@ def plot_nj_tree(tree: Node, ax: Axes = None, **kwargs) -> None:
 
     def draw(node, x):
         if node.left is None and node.right is None:
-            ax.text(x + 1, y_positions[node], node.name, va="center")
+            colour = "black"
+
+            # for 3d
+            if group_by_label is not None and colours is not None:
+                group = group_by_label.get(node.name)
+                colour = colours.get(group, "black")
+
+            ax.text(x + 1, y_positions[node], node.name, va="center", color=colour)
             return
         
         left = node.left
