@@ -179,7 +179,7 @@ def plot_nj_tree(tree: Node, ax: Axes = None, group_by_label = None, colours = N
                 group = group_by_label.get(node.name)
                 colour = colours.get(group, "black")
 
-            ax.text(x + 1, y_positions[node], node.name, va="center", color=colour)
+            ax.text(x + 0.5, y_positions[node], node.name, va="center", color=colour)
             return
         
         left = node.left

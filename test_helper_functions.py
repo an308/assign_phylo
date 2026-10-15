@@ -301,6 +301,47 @@ class TestPlottingDendrogram(unittest.TestCase):
 
         f.savefig("tests/test_plotting_dendrogram.png", dpi=400, bbox_inches="tight")
 
+class TestLectureExample(unittest.TestCase):
+    def setUp(self) -> None:
+        from helper_functions import neighbor_joining
+
+        distances = np.array(
+            [
+                [0, 1, 4, 4, 2],
+                [0, 0, 5, 5, 3],
+                [0, 0, 0, 4, 3],
+                [0, 0, 0, 0, 2],
+                [0, 0, 0, 0, 0],
+            ],
+            dtype=float,
+        )
+
+        distances = distances + distances.T
+        self.result = neighbor_joining(distances, list("ABCDE"))
+
+    def test_plot(self):
+        from helper_functions import plot_nj_tree
+        import matplotlib.pyplot as plt
+
+        f, ax = plt.subplots(figsize=(15, 15))
+
+        plot_nj_tree(self.result, ax=ax)
+        f.savefig("tests/test_lecture_example.png", dpi=400, bbox_inches="tight")
+
+        plotted_lens = []
+        for line in ax.lines:
+            x = line.get_xdata()
+            y = line.get_ydata()
+
+            # only check horizontal lines, ie. y1 = y2
+            if len(x) == 2 and len(y) == 2 and y[0] == y[1]:
+                plotted_lens.append(abs(x[1] - x[0]))
+
+        # lengths from rooted tree in NJ example from lecture notes, 0.5 is for root
+        expected_lens = np.array([0, 0.125, 0.125, 0.25, 0.5, 1, 1.75, 1.75, 2.25], dtype=float)
+
+        np.testing.assert_array_equal(sorted(plotted_lens), expected_lens)
+
 
 if __name__ == "__main__":
     unittest.main()
